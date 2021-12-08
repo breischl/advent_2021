@@ -1,8 +1,8 @@
-/// Take a vector depths and return the number of times the depth increases
-pub fn calculate_increase_count(depths: &Vec<u16>) -> u16 {
-    calculate_diffs(depths)
-        .into_iter()
-        .filter(|c| *c == DepthDirection::Up)
+/// Take a vector DepthDirection and return the number of times the depth increases
+pub fn calculate_increase_count(directions: &Vec<DepthDirection>) -> u16 {
+    directions
+        .iter()
+        .filter(|c: &&DepthDirection| **c == DepthDirection::Up)
         .count() as u16
 }
 
@@ -50,6 +50,25 @@ pub fn calculate_diffs(depths: &Vec<u16>) -> Vec<DepthDirection> {
     //     .filter(|opt| !opt.is_none())
     //     .map(Option::unwrap)
     //     .collect()
+}
+
+/// Calculates the sum of a 3-measurement sliding window, as described in Day 1, Problem 2
+pub fn calculate_sliding_window_sums(depths: &Vec<u16>) -> Vec<u16> {
+    if depths.len() < 3 {
+        let result = match depths.len() {
+            0 => vec![0],
+            1 => vec![depths[0]],
+            2 => vec![depths[0] + depths[1]],
+            _ => unreachable!(),
+        };
+        return result;
+    }
+
+    let mut results: Vec<u16> = Vec::with_capacity(depths.len() - 2);
+    for i in 2..depths.len() {
+        results.push(depths[i] + depths[i - 1] + depths[i - 2]);
+    }
+    results
 }
 
 #[derive(PartialEq, Debug)]

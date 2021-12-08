@@ -29,6 +29,20 @@ fn main() {
         })
         .collect();
     println!("Depths: {:?}", &depths);
-    println!("Changes: {:?}", calculate_diffs(&depths));
-    println!("Number of increases: {}", calculate_increase_count(&depths));
+
+    let depth_diffs = calculate_diffs(&depths);
+    println!("Changes: {:?}", depth_diffs);
+    println!(
+        "Number of increases: {}",
+        calculate_increase_count(&depth_diffs)
+    );
+
+    let windows = calculate_sliding_window_sums(&depths);
+    let window_diffs = calculate_diffs(&windows);
+    println!("Sliding windows: {:?}", windows);
+    println!("Window changes: {:?}", window_diffs);
+    println!(
+        "Number of window increases: {}",
+        calculate_increase_count(&window_diffs)
+    );
 }
