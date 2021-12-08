@@ -1,74 +1,48 @@
-/// Take a vector DepthDirection and return the number of times the depth increases
-pub fn calculate_increase_count(directions: &Vec<DepthDirection>) -> u16 {
+use sliding_windows::{IterExt, Storage};
+
+/// Calculate the direction between successive depth measurements in the given stream
+/// TODO: This should probably return Option<Iterator> instead, to account for error cases (eg, 0 or 1 element in the iterator)
+pub fn calculate_direction<'a>(
+    depths: &'a mut dyn Iterator<Item = u16>,
+) -> impl Iterator<Item = DepthDirection> + 'a {
+    let mut prev: Option<u16> = None;
+
+    let new_iter = depths
+        .map(move |d: u16| {
+            let direction = prev.map(|p| {
+                if d > p {
+                    DepthDirection::Up
+                } else if d == p {
+                    DepthDirection::NoChange
+                } else {
+                    DepthDirection::Down
+                }
+            });
+            prev = Some(d);
+            return direction;
+        })
+        .flatten();
+
+    new_iter
+}
+
+/// Calculate the number of times the given iterator contains DepthDirection::Up
+pub fn calculate_increase_count(directions: &mut impl Iterator<Item = DepthDirection>) -> u16 {
     directions
-        .iter()
-        .filter(|c: &&DepthDirection| **c == DepthDirection::Up)
+        .filter(|c: &DepthDirection| *c == DepthDirection::Up)
         .count() as u16
 }
 
-/// Take a vector of depths, and return a vector of changes in depth
-/// The return vector will be shorter by one element, as it must be
-/// If the input vector is less than 2 elements long, the result will contain the single element `DepthDirection::NoChange`
-///
-/// This isn't technically required by the Advent problem, but I wanted to play around with Rust `enum` a bit
-pub fn calculate_diffs(depths: &Vec<u16>) -> Vec<DepthDirection> {
-    if depths.len() < 2 {
-        return vec![DepthDirection::NoChange];
-    }
-
-    let mut results: Vec<DepthDirection> = Vec::with_capacity(depths.len() - 1);
-    for i in 1..depths.len() {
-        let prev = depths[i - 1];
-        let curr = depths[i];
-        if curr > prev {
-            results.push(DepthDirection::Up);
-        } else if curr == prev {
-            results.push(DepthDirection::NoChange);
-        } else {
-            results.push(DepthDirection::Down);
-        }
-    }
-    results
-
-    // This functional approach works, but the iterative version seems cleaner
-    // let mut prev: Option<u16> = None;
-    // depths
-    //     .iter()
-    //     .map(|d| {
-    //         let direction = prev.map(|p| {
-    //             if *d > p {
-    //                 DepthDirection::Up
-    //             } else if *d == p {
-    //                 DepthDirection::NoChange
-    //             } else {
-    //                 DepthDirection::Down
-    //             }
-    //         });
-    //         prev = Some(*d);
-    //         return direction;
-    //     })
-    //     .filter(|opt| !opt.is_none())
-    //     .map(Option::unwrap)
-    //     .collect()
-}
-
-/// Calculates the sum of a 3-measurement sliding window, as described in Day 1, Problem 2
-pub fn calculate_sliding_window_sums(depths: &Vec<u16>) -> Vec<u16> {
-    if depths.len() < 3 {
-        let result = match depths.len() {
-            0 => vec![0],
-            1 => vec![depths[0]],
-            2 => vec![depths[0] + depths[1]],
-            _ => unreachable!(),
-        };
-        return result;
-    }
-
-    let mut results: Vec<u16> = Vec::with_capacity(depths.len() - 2);
-    for i in 2..depths.len() {
-        results.push(depths[i] + depths[i - 1] + depths[i - 2]);
-    }
-    results
+/// Calculates the sum of the values in the stream on a sliding window.
+/// The size of the sliding window is determined by the `Storage<>` passed in.
+/// TODO: This should probably return `Option<Iterator<_>>` for error cases (eg, less than one window of data)
+pub fn calculate_sliding_window_sums<'a>(
+    depths: &'a mut impl Iterator<Item = u16>,
+    storage: &'a mut Storage<u16>,
+) -> impl Iterator<Item = u16> + 'a {
+    depths
+        .sliding_windows(storage)
+        .map(|window| window.iter().map(|&x| x).sum())
 }
 
 #[derive(PartialEq, Debug)]
@@ -84,40 +58,46 @@ mod test {
 
     #[test]
     pub fn empty() {
-        let result = calculate_diffs(&vec![]);
-        assert_eq!(result, vec![DepthDirection::NoChange]);
+        let input = vec![];
+        let result: Vec<_> = calculate_direction(&mut input.into_iter()).collect();
+        assert_eq!(result, vec![]);
     }
 
     #[test]
     pub fn single() {
-        let result = calculate_diffs(&vec![1]);
-        assert_eq!(result, vec![DepthDirection::NoChange]);
+        let input = vec![1];
+        let result: Vec<_> = calculate_direction(&mut input.into_iter()).collect();
+        assert_eq!(result, vec![]);
     }
 
     #[test]
     pub fn down_1() {
-        let result = calculate_diffs(&vec![10, 9]);
+        let input = vec![10, 9];
+        let result: Vec<_> = calculate_direction(&mut input.into_iter()).collect();
         assert_eq!(1, result.len());
         assert_eq!(DepthDirection::Down, result[0]);
     }
 
     #[test]
     pub fn up_1() {
-        let result = calculate_diffs(&vec![50, 75]);
+        let input = vec![50, 75];
+        let result: Vec<_> = calculate_direction(&mut input.into_iter()).collect();
         assert_eq!(1, result.len());
         assert_eq!(DepthDirection::Up, result[0]);
     }
 
     #[test]
     pub fn no_change_1() {
-        let result = calculate_diffs(&vec![50, 50]);
+        let input = vec![50, 50];
+        let result: Vec<_> = calculate_direction(&mut input.into_iter()).collect();
         assert_eq!(1, result.len());
         assert_eq!(DepthDirection::NoChange, result[0]);
     }
 
     #[test]
     pub fn sequence_1() {
-        let result = calculate_diffs(&vec![50, 51, 52, 53, 49, 5, 4, 4, 4, 100]);
+        let input = vec![50, 51, 52, 53, 49, 5, 4, 4, 4, 100];
+        let result: Vec<_> = calculate_direction(&mut input.into_iter()).collect();
         let expectation = vec![
             DepthDirection::Up,
             DepthDirection::Up,
@@ -134,7 +114,18 @@ mod test {
 
     #[test]
     pub fn count_sequence_1() {
-        let result = calculate_increase_count(&vec![50, 51, 52, 53, 49, 5, 4, 4, 4, 100]);
+        let input = vec![
+            DepthDirection::Up,
+            DepthDirection::Up,
+            DepthDirection::Up,
+            DepthDirection::Down,
+            DepthDirection::Down,
+            DepthDirection::Down,
+            DepthDirection::NoChange,
+            DepthDirection::NoChange,
+            DepthDirection::Up,
+        ];
+        let result = calculate_increase_count(&mut input.into_iter());
         let expectation = 4;
         assert_eq!(result, expectation);
     }

@@ -1,5 +1,6 @@
 mod depth_diffs;
 use depth_diffs::*;
+use sliding_windows::Storage;
 use std::fs::File;
 use std::io::prelude::*;
 use std::path::Path;
@@ -18,7 +19,7 @@ fn main() {
     let mut s = String::new();
     match file.read_to_string(&mut s) {
         Err(why) => panic!("couldn't read {}: {}", path_display, why),
-        Ok(_) => println!("Successfully read {} characters", s.len()),
+        Ok(_) => (),
     }
 
     let depths: Vec<u16> = s
@@ -28,21 +29,19 @@ fn main() {
             Ok(num) => num,
         })
         .collect();
-    println!("Depths: {:?}", &depths);
 
-    let depth_diffs = calculate_diffs(&depths);
-    println!("Changes: {:?}", depth_diffs);
-    println!(
-        "Number of increases: {}",
-        calculate_increase_count(&depth_diffs)
-    );
+    //This is a little awkward, but I had problems where some of the streaming methods required ownership of the values in the iterator
+    //This turned out to be the easiest solution
+    let mut depths_iter_1 = depths.into_iter();
+    let mut depths_iter_2 = depths_iter_1.clone();
 
-    let windows = calculate_sliding_window_sums(&depths);
-    let window_diffs = calculate_diffs(&windows);
-    println!("Sliding windows: {:?}", windows);
-    println!("Window changes: {:?}", window_diffs);
-    println!(
-        "Number of window increases: {}",
-        calculate_increase_count(&window_diffs)
-    );
+    let mut depth_diffs = calculate_direction(&mut depths_iter_1);
+    let count = calculate_increase_count(&mut depth_diffs);
+    println!("Number of increases: {}", count);
+
+    let mut storage = Storage::new(3);
+    let mut windows = calculate_sliding_window_sums(&mut depths_iter_2, &mut storage);
+    let mut window_diffs = calculate_direction(&mut windows);
+    let count = calculate_increase_count(&mut window_diffs);
+    println!("Number of window increases: {}", count);
 }
