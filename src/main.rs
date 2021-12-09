@@ -30,8 +30,10 @@ fn main() {
         })
         .collect();
 
-    //This is a little awkward, but I had problems where some of the streaming methods required ownership of the values in the iterator
-    //This turned out to be the easiest solution
+    //For educational reasons I wrote this to avoid cloning or re-reading the entire list of depths, even though in this exact case it would not be problematic.
+    //This led to the following somewhat-awkward cloning of iterators. Problem is that I want `calculate_direction()` to take either a plain iterator of depths,
+    //or an iterator of the sliding windows produced from `calculate_sliding_window_sums()`. But the former would be iterating references, while the latter iterates owned values.
+    //This is the best solution I could find that doesn't re-read the depths or re-allocate an equal (or almost-equal) amount of space.
     let mut depths_iter_1 = depths.into_iter();
     let mut depths_iter_2 = depths_iter_1.clone();
 

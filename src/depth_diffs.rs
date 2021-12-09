@@ -1,4 +1,5 @@
 use sliding_windows::{IterExt, Storage};
+use std::cmp::Ordering;
 
 /// Calculate the direction between successive depth measurements in the given stream
 /// TODO: This should probably return Option<Iterator> instead, to account for error cases (eg, 0 or 1 element in the iterator)
@@ -10,12 +11,11 @@ pub fn calculate_direction<'a>(
     let new_iter = depths
         .map(move |d: u16| {
             let direction = prev.map(|p| {
-                if d > p {
-                    DepthDirection::Up
-                } else if d == p {
-                    DepthDirection::NoChange
-                } else {
-                    DepthDirection::Down
+                let diff = d.partial_cmp(&p).expect("How is your depth NaN?");
+                match diff {
+                    Ordering::Greater => DepthDirection::Up,
+                    Ordering::Equal => DepthDirection::NoChange,
+                    Ordering::Less => DepthDirection::Down,
                 }
             });
             prev = Some(d);
