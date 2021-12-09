@@ -1,7 +1,7 @@
 use sliding_windows::{IterExt, Storage};
 use std::cmp::Ordering;
 
-pub fn run(input: String) -> () {
+pub fn run(input: String) -> Result<String, String> {
     let depths: Vec<u16> = input
         .lines()
         .map(|line| match line.parse() {
@@ -26,6 +26,8 @@ pub fn run(input: String) -> () {
     let mut window_diffs = calculate_direction(&mut windows);
     let count = calculate_increase_count(&mut window_diffs);
     println!("Number of window increases: {}", count);
+
+    Ok(String::from("Ran successfully"))
 }
 
 /// Calculate the direction between successive depth measurements in the given stream

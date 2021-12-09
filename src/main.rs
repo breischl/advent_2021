@@ -33,7 +33,11 @@ fn main() {
         Ok(_) => (),
     }
 
-    (*puzzle_info.func)(s);
+    let result = (*puzzle_info.func)(s);
+    match result {
+        Ok(s) => println!("{}", s),
+        Err(e) => println!("{}", e),
+    }
 }
 
 fn get_puzzle_by_day_number(day: usize) -> PuzzleInfo {
@@ -69,7 +73,7 @@ fn get_puzzle_info(puzzle: &Puzzle) -> PuzzleInfo {
 struct PuzzleInfo {
     input: String,
     //Using `'static` lifetime since this is basically a commandline argument anyway
-    func: &'static dyn Fn(String) -> (),
+    func: &'static dyn Fn(String) -> Result<String, String>,
 }
 
 #[derive(Parser, Debug)]
