@@ -1,11 +1,13 @@
-mod depth_diffs;
-use depth_diffs::*;
+mod sonar;
+use clap::{AppSettings, ArgGroup, Parser};
 use sliding_windows::Storage;
+use sonar::*;
 use std::fs::File;
 use std::io::prelude::*;
 use std::path::Path;
 
 fn main() {
+    let args = Args::parse();
     let path = Path::new("inputs/day1.txt");
     let path_display = path.display();
     println!("Reading input from {}", path_display);
@@ -46,4 +48,26 @@ fn main() {
     let mut window_diffs = calculate_direction(&mut windows);
     let count = calculate_increase_count(&mut window_diffs);
     println!("Number of window increases: {}", count);
+}
+
+#[derive(Parser, Debug)]
+#[clap(author, version, about)]
+#[clap(global_setting(AppSettings::DeriveDisplayOrder))]
+#[clap(group(ArgGroup::new("puz").required(false).args(&["day", "puzzle"])))]
+struct Args {
+    #[clap(short, long, value_name = "DAY")]
+    #[clap(parse(try_from_str))]
+    //Run a puzzle by the day number of advent calendar (starting at 1)
+    day: Option<usize>,
+
+    #[clap(arg_enum)]
+    #[clap(short, long)]
+    puzzle: Option<Puzzle>,
+}
+
+#[derive(Copy, Clone, PartialEq, Eq, clap::ArgEnum, Debug)]
+enum Puzzle {
+    latest,
+    sonar,
+    dive,
 }

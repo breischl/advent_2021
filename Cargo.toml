@@ -2,8 +2,15 @@
 name = "advent_2021"
 version = "0.1.0"
 edition = "2021"
+authors = ["Brian Reischl <breischl@gmail.com>"]
+description = "Solving the Advent of Code 2021 challenges <https://adventofcode.com/2021>"
+homepage = "https://github.com/breischl/advent_2021"
+public = false
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
 "sliding_windows" = "3.0.0"
+#"clap" = "3.*"
+
+"clap" = {git = "https://github.com/clap-rs/clap", features=["derive"]}
