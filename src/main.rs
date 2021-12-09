@@ -1,14 +1,23 @@
+mod dive;
 mod sonar;
 use clap::{AppSettings, ArgGroup, Parser};
-use sliding_windows::Storage;
-use sonar::*;
 use std::fs::File;
 use std::io::prelude::*;
 use std::path::Path;
 
 fn main() {
     let args = Args::parse();
-    let path = Path::new("inputs/day1.txt");
+
+    let puzzle_info: PuzzleInfo;
+
+    if let Some(day) = args.day {
+        puzzle_info = get_puzzle_by_day_number(day);
+    } else if let Some(p) = args.puzzle {
+        puzzle_info = get_puzzle_info(&p);
+    } else {
+        puzzle_info = get_latest_puzzle();
+    }
+    let path = Path::new("inputs").join(puzzle_info.input);
     let path_display = path.display();
     println!("Reading input from {}", path_display);
 
@@ -24,30 +33,43 @@ fn main() {
         Ok(_) => (),
     }
 
-    let depths: Vec<u16> = s
-        .lines()
-        .map(|line| match line.parse() {
-            Err(why) => panic!("Failed to parse {} to integer because {}", line, why),
-            Ok(num) => num,
-        })
-        .collect();
+    (*puzzle_info.func)(s);
+}
 
-    //For educational reasons I wrote this to avoid cloning or re-reading the entire list of depths, even though in this exact case it would not be problematic.
-    //This led to the following somewhat-awkward cloning of iterators. Problem is that I want `calculate_direction()` to take either a plain iterator of depths,
-    //or an iterator of the sliding windows produced from `calculate_sliding_window_sums()`. But the former would be iterating references, while the latter iterates owned values.
-    //This is the best solution I could find that doesn't re-read the depths or re-allocate an equal (or almost-equal) amount of space.
-    let mut depths_iter_1 = depths.into_iter();
-    let mut depths_iter_2 = depths_iter_1.clone();
+fn get_puzzle_by_day_number(day: usize) -> PuzzleInfo {
+    if let Some(p) = PUZZLES.get(day - 1) {
+        get_puzzle_info(p)
+    } else {
+        panic!("Could not find puzzle for day {}", day);
+    }
+}
 
-    let mut depth_diffs = calculate_direction(&mut depths_iter_1);
-    let count = calculate_increase_count(&mut depth_diffs);
-    println!("Number of increases: {}", count);
+fn get_latest_puzzle() -> PuzzleInfo {
+    let pz = PUZZLES;
+    let last = pz
+        .last()
+        .expect("Puzzles list was unexpectedly empty, bad programmer!");
+    get_puzzle_info(last)
+}
 
-    let mut storage = Storage::new(3);
-    let mut windows = calculate_sliding_window_sums(&mut depths_iter_2, &mut storage);
-    let mut window_diffs = calculate_direction(&mut windows);
-    let count = calculate_increase_count(&mut window_diffs);
-    println!("Number of window increases: {}", count);
+fn get_puzzle_info(puzzle: &Puzzle) -> PuzzleInfo {
+    match puzzle {
+        Puzzle::Sonar => PuzzleInfo {
+            input: String::from("sonar.txt"),
+            func: &sonar::run,
+        },
+        Puzzle::Dive => PuzzleInfo {
+            input: String::from("dive.txt"),
+            func: &dive::run,
+        },
+        Puzzle::Latest => get_latest_puzzle(),
+    }
+}
+
+struct PuzzleInfo {
+    input: String,
+    //Using `'static` lifetime since this is basically a commandline argument anyway
+    func: &'static dyn Fn(String) -> (),
 }
 
 #[derive(Parser, Debug)]
@@ -67,7 +89,9 @@ struct Args {
 
 #[derive(Copy, Clone, PartialEq, Eq, clap::ArgEnum, Debug)]
 enum Puzzle {
-    latest,
-    sonar,
-    dive,
+    Latest,
+    Sonar,
+    Dive,
 }
+
+const PUZZLES: [Puzzle; 2] = [Puzzle::Sonar, Puzzle::Dive];
