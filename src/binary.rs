@@ -1,5 +1,7 @@
 //A very bit-twiddly answer to Day 3
 //It was fun mucking around with bits, but I suspect this is a wildly verbose and inefficient solution
+//It probably would've been a whole lot easier to just work with the characters separately
+
 const BIT_LENGTH: usize = 12; //all the inputs are actually 12 bits long
 const NUM_MASK: u16 = 0x0FFF; //mask a u16 down to 12 bits
 
@@ -10,52 +12,66 @@ pub fn run(input: String) -> Result<String, String> {
         .map(|r| r.expect("Failed to parse binary value"))
         .collect();
 
-    let most_common_bits = find_most_common_bits(&binary_lines);
-
+    let most_common_bits = find_most_common_bits(binary_lines.iter());
     println!("Most common bits: {:?}", most_common_bits);
 
     let gamma = bits_to_int(&most_common_bits);
     let epsilon = !gamma & NUM_MASK;
     let power = gamma as u64 * epsilon as u64;
 
-    let oxy_power = find_longest_matching_prefix(&binary_lines, &gamma);
-    let co2_rating = find_longest_matching_prefix(&binary_lines, &epsilon);
+    let oxy_power = find_lr_value(&binary_lines, true);
+    let co2_rating = find_lr_value(&binary_lines, false);
     let lr_rating = oxy_power as u64 * co2_rating as u64;
 
     Ok(String::from(format!(
-        "Gamma: {}, Epsilon: {}, Power: {}\nOxy: {}, CO2: {}, Life Supprt: {}",
+        "Gamma: {}, Epsilon: {}, Power: {}\nOxy: {}, CO2: {}, Life Support: {}",
         gamma, epsilon, power, oxy_power, co2_rating, lr_rating
     )))
 }
 
-//Implements the Part 2 problem
-//We are essentially trying to find the number from the input that has the longest matching prefix with gamma (to find oxy rating) or epsilon (to find CO2 rating)
-//To do this we can walk through the list and check the matching prefix for each number
-fn find_longest_matching_prefix(nums: &Vec<u16>, prefix: &u16) -> u16 {
-    let mut best_match: u16 = nums[0]; //first item may not actually match, but given the input we can assume something else will later
-    let mut best_match_length: u16 = count_prefix_match_bits(prefix, &nums[0]);
+fn find_lr_value(nums: &Vec<u16>, find_most_common: bool) -> u16 {
+    let mut prefix: u16 = 0;
+    let mut mask: u16 = 0;
 
-    for num in nums {
-        let prefix_length = count_prefix_match_bits(prefix, num);
-        if prefix_length > best_match_length {
-            best_match = *num;
-            best_match_length = prefix_length;
+    for bitidx in (0..=(BIT_LENGTH - 1)).rev() {
+        let (zeroes, ones) = nums
+            .iter()
+            .filter(|n| is_prefix_match(&prefix, n, mask))
+            .fold((0, 0), |(zero_count, one_count), val| {
+                let bit = extract_bit(val, bitidx as u16);
+                if bit == 1 {
+                    ((zero_count), (one_count + 1))
+                } else {
+                    ((zero_count + 1), (one_count))
+                }
+            });
+
+        if (zeroes + ones) == 1 {
+            break;
+        } else if zeroes + ones == 0 {
+            //This is a big hack. If we got to zero matches, then unset the previous mask bit and we should be done.
+            //Covers case where the last bit left us with a single 1 and a single 0
+            mask = mask & !(1 << (bitidx - 1));
+            break;
+        } else if find_most_common && ones >= zeroes {
+            prefix = prefix | 1 << bitidx;
+        } else if !find_most_common && ones < zeroes && ones > 0 {
+            prefix = prefix | 1 << bitidx;
         }
+        mask = mask | (1 << bitidx);
     }
 
-    return best_match;
+    let results: Vec<&u16> = nums
+        .iter()
+        .filter(|n| is_prefix_match(&prefix, n, mask))
+        .collect();
+    debug_assert_eq!(1, results.len());
+
+    *results[0]
 }
 
-fn count_prefix_match_bits(left: &u16, right: &u16) -> u16 {
-    const BIT_LENGTH_16: u16 = BIT_LENGTH as u16;
-    for i in 0..BIT_LENGTH_16 {
-        let left_bit = extract_bit(left, BIT_LENGTH_16 - i - 1);
-        let right_bit = extract_bit(right, BIT_LENGTH_16 - i - 1);
-        if left_bit != right_bit {
-            return i;
-        }
-    }
-    return BIT_LENGTH_16;
+fn is_prefix_match(left: &u16, right: &u16, mask: u16) -> bool {
+    (left & mask) == (right & mask)
 }
 
 fn bits_to_int(bits: &[u16; BIT_LENGTH]) -> u16 {
@@ -67,18 +83,18 @@ fn bits_to_int(bits: &[u16; BIT_LENGTH]) -> u16 {
     int
 }
 
-fn find_most_common_bits(ints: &Vec<u16>) -> [u16; BIT_LENGTH] {
+fn find_most_common_bits(ints: std::slice::Iter<u16>) -> [u16; BIT_LENGTH] {
     let mut counts: [u16; BIT_LENGTH] = [0; BIT_LENGTH];
+    let mut num_items: u32 = 0;
 
     for int in ints {
+        num_items += 1;
         for i in 0..counts.len() as u16 {
             counts[i as usize] += extract_bit(int, BIT_LENGTH as u16 - i - 1);
         }
     }
 
-    println!("Int counts: {:?}", counts);
-
-    let half = (ints.len() / 2) as u16;
+    let half = (num_items / 2) as u16;
     for i in 0..counts.len() {
         if counts[i] >= half {
             counts[i] = 1;
@@ -104,55 +120,45 @@ mod test {
     use super::*;
 
     #[test]
+    pub fn is_prefix_match_works() {
+        assert_eq!(
+            true,
+            is_prefix_match(&0b1000000000000000, &0b1111000000000000, 0b1000000000000000)
+        );
+
+        assert_eq!(
+            false,
+            is_prefix_match(&0b1000000000000000, &0b1111000000000000, 0b1100000000000000)
+        );
+
+        assert_eq!(
+            false,
+            is_prefix_match(&0b1001000000000000, &0b1011000000000000, 0b1111000000000000)
+        );
+    }
+
+    #[test]
     pub fn find_longest_matching_prefix_works() {
-        let input = vec![
-            parse_binary("001000000001").unwrap(),
-            parse_binary("101100000001").unwrap(),
-            parse_binary("001010000000").unwrap(),
-            parse_binary("101010000011").unwrap(),
-        ];
+        let input: Vec<u16> = vec![
+            "000000000100",
+            "000000011110",
+            "000000010110",
+            "000000010111",
+            "000000010101",
+            "000000001111",
+            "000000000111",
+            "000000011100",
+            "000000010000",
+            "000000011001",
+            "000000000010",
+            "000000001010",
+        ]
+        .iter()
+        .map(|s| parse_binary(s).unwrap())
+        .collect();
 
-        assert_eq!(
-            input[3],
-            find_longest_matching_prefix(&input, &parse_binary("101000000001").unwrap())
-        );
-
-        assert_eq!(
-            input[1],
-            find_longest_matching_prefix(&input, &parse_binary("101111111111").unwrap())
-        );
-
-        assert_eq!(
-            input[2],
-            find_longest_matching_prefix(&input, &parse_binary("001011100000").unwrap())
-        );
-    }
-
-    #[test]
-    pub fn count_prefix_match_bits_full_match() -> Result<(), String> {
-        let left = parse_binary("010010001011")?;
-        let right = parse_binary("010010001011")?;
-        assert_eq!(12, count_prefix_match_bits(&left, &right));
-
-        Ok(())
-    }
-
-    #[test]
-    pub fn count_prefix_match_bits_no_match() -> Result<(), String> {
-        let left = parse_binary("000000000000")?;
-        let right = parse_binary("111111111111")?;
-        assert_eq!(0, count_prefix_match_bits(&left, &right));
-
-        Ok(())
-    }
-
-    #[test]
-    pub fn count_prefix_match_bits_6() -> Result<(), String> {
-        let left = parse_binary("101010000000")?;
-        let right = parse_binary("101010111111")?;
-        assert_eq!(6, count_prefix_match_bits(&left, &right));
-
-        Ok(())
+        assert_eq!(23, find_lr_value(&input, true));
+        assert_eq!(10, find_lr_value(&input, false));
     }
 
     #[test]
@@ -165,14 +171,25 @@ mod test {
 
     #[test]
     pub fn extract_bit_works() {
-        assert_eq!(1, extract_bit(&131, 0));
-        assert_eq!(1, extract_bit(&131, 1));
-        assert_eq!(0, extract_bit(&131, 2));
-        assert_eq!(0, extract_bit(&131, 3));
-        assert_eq!(0, extract_bit(&131, 4));
-        assert_eq!(0, extract_bit(&131, 5));
-        assert_eq!(0, extract_bit(&131, 6));
-        assert_eq!(1, extract_bit(&131, 7));
+        let input = parse_binary("10100011").unwrap();
+        assert_eq!(1, extract_bit(&input, 0));
+        assert_eq!(1, extract_bit(&input, 1));
+        assert_eq!(0, extract_bit(&input, 2));
+        assert_eq!(0, extract_bit(&input, 3));
+        assert_eq!(0, extract_bit(&input, 4));
+        assert_eq!(1, extract_bit(&input, 5));
+        assert_eq!(0, extract_bit(&input, 6));
+        assert_eq!(1, extract_bit(&input, 7));
+    }
+
+    #[test]
+    pub fn extract_bit_works_30() {
+        let input = 30;
+        assert_eq!(0, extract_bit(&input, 0));
+        assert_eq!(1, extract_bit(&input, 1));
+        assert_eq!(1, extract_bit(&input, 2));
+        assert_eq!(1, extract_bit(&input, 3));
+        assert_eq!(1, extract_bit(&input, 4));
     }
 
     #[test]
@@ -187,7 +204,7 @@ mod test {
             .chars()
             .map(|c| c.to_string().parse::<u16>().unwrap())
             .collect();
-        assert_eq!(expected, find_most_common_bits(&input));
+        assert_eq!(expected, find_most_common_bits(input.iter()));
     }
 
     #[test]
