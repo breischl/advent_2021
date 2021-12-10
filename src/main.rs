@@ -2,6 +2,7 @@ mod binary;
 mod dive;
 mod sonar;
 use clap::{AppSettings, ArgGroup, Parser};
+mod squid;
 use std::fs::File;
 use std::io::prelude::*;
 use std::path::Path;
@@ -71,6 +72,10 @@ fn get_puzzle_info(puzzle: &Puzzle) -> PuzzleInfo {
             input: String::from("binary.txt"),
             func: &binary::run,
         },
+        Puzzle::Squid => PuzzleInfo {
+            input: String::from("squid.txt"),
+            func: &squid::run,
+        },
         Puzzle::Latest => get_latest_puzzle(),
     }
 }
@@ -102,6 +107,7 @@ enum Puzzle {
     Sonar,
     Dive,
     Binary,
+    Squid,
 }
 
-const PUZZLES: [Puzzle; 3] = [Puzzle::Sonar, Puzzle::Dive, Puzzle::Binary];
+const PUZZLES: [Puzzle; 4] = [Puzzle::Sonar, Puzzle::Dive, Puzzle::Binary, Puzzle::Squid];
