@@ -12,7 +12,7 @@
                 "args": [
                     "test",
                     "--no-run",
-                    "--lib",
+                    "--bin=advent_2021",
                     "--package=advent_2021"
                 ]
                 // ,
