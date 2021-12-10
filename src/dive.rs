@@ -1,34 +1,42 @@
 pub fn run(input: String) -> Result<String, String> {
     let (pos, multiple) = run_internal(input)?;
     Ok(String::from(format!(
-        "Range: {}, Depth: {}, multiple: {}",
-        pos.range, pos.depth, multiple
+        "Range: {}, Depth: {}, Aim: {}, multiple: {}",
+        pos.range, pos.depth, pos.aim, multiple
     )))
 }
 
-fn run_internal(input: String) -> Result<(Position, u64), String> {
-    let mut pos = Position { range: 0, depth: 0 };
+#[allow(unused_parens)]
+fn run_internal(input: String) -> Result<(SubState, u64), String> {
+    let mut pos = SubState {
+        aim: 0,
+        range: 0,
+        depth: 0,
+    };
     let commands_results = input.lines().map(parse_command);
 
     for result in commands_results {
         match result {
             Err(e) => return Err(e.to_string()),
             Ok(command) => match command {
-                Command::Forward { distance: d } => pos.range += d,
-                Command::Down { distance: d } => pos.depth += d,
-                Command::Up { distance: d } => pos.depth -= d,
+                Command::Forward { distance: d } => {
+                    pos.range += d;
+                    pos.depth += (d * pos.aim);
+                }
+                Command::Down { distance: d } => pos.aim += d,
+                Command::Up { distance: d } => pos.aim -= d,
             },
         }
     }
 
-    let multiple = pos.depth as u64 * pos.range as u64;
+    let multiple = pos.depth * pos.range;
     Ok((pos, multiple))
 }
 
 fn parse_command(line: &str) -> Result<Command, String> {
     let parts: Vec<&str> = line.trim().split_whitespace().collect();
     if let [direction, distance, ..] = parts.as_slice() {
-        match distance.parse::<u16>() {
+        match distance.parse::<u64>() {
             Err(e) => Err(format!(
                 "Unable to parse distance from \"{}\": {}",
                 distance,
@@ -50,16 +58,17 @@ fn parse_command(line: &str) -> Result<Command, String> {
     }
 }
 
-struct Position {
-    range: u16,
-    depth: u16,
+struct SubState {
+    aim: u64,
+    range: u64,
+    depth: u64,
 }
 
 #[derive(PartialEq, Debug, Eq)]
 enum Command {
-    Forward { distance: u16 },
-    Up { distance: u16 },
-    Down { distance: u16 },
+    Forward { distance: u64 },
+    Up { distance: u64 },
+    Down { distance: u64 },
 }
 
 #[cfg(test)]
@@ -88,10 +97,10 @@ mod test {
 
     #[test]
     pub fn run_works() {
-        let input = "down 20\nforward 20\nup 10\n";
+        let input = "down 20\nforward 20\nup 20\nforward 10";
         let result = run_internal(String::from(input)).expect("Should not have failed");
-        assert_eq!(20, result.0.range);
-        assert_eq!(10, result.0.depth);
-        assert_eq!(200, result.1);
+        assert_eq!(30, result.0.range);
+        assert_eq!(400, result.0.depth);
+        assert_eq!(12000, result.1);
     }
 }
