@@ -1,3 +1,4 @@
+mod binary;
 mod dive;
 mod sonar;
 use clap::{AppSettings, ArgGroup, Parser};
@@ -66,6 +67,10 @@ fn get_puzzle_info(puzzle: &Puzzle) -> PuzzleInfo {
             input: String::from("dive.txt"),
             func: &dive::run,
         },
+        Puzzle::Binary => PuzzleInfo {
+            input: String::from("binary.txt"),
+            func: &binary::run,
+        },
         Puzzle::Latest => get_latest_puzzle(),
     }
 }
@@ -96,6 +101,7 @@ enum Puzzle {
     Latest,
     Sonar,
     Dive,
+    Binary,
 }
 
-const PUZZLES: [Puzzle; 2] = [Puzzle::Sonar, Puzzle::Dive];
+const PUZZLES: [Puzzle; 3] = [Puzzle::Sonar, Puzzle::Dive, Puzzle::Binary];
