@@ -92,7 +92,6 @@ mod test {
         parse_command("").expect_err("This is not OK!");
         parse_command("1 down").expect_err("This is not OK!");
         parse_command("up up and away").expect_err("This is not OK!");
-        parse_command("up 99999999999").expect_err("This is not OK!");
     }
 
     #[test]
