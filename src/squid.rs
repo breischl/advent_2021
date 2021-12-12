@@ -4,7 +4,7 @@ use std::fmt::Display;
 pub fn run(input: String) -> Result<String, String> {
     let lines: Vec<&str> = input.lines().collect();
     let draws: Vec<u8> = lines[0]
-        .split_ascii_whitespace()
+        .split(',')
         .map(|s| s.parse::<u8>().unwrap())
         .collect();
 
@@ -51,11 +51,6 @@ pub fn run(input: String) -> Result<String, String> {
     Err(String::from("Not implemented"))
 }
 
-// fn do_draw<'a>(boards: &mut BingoBoard, draw: u8) -> Option<&'a BingoBoard> {
-//         board.record_draw(draw);
-
-//     None
-
 const MARK_MASK: u8 = 0b10000000;
 const VALUE_MASK: u8 = 0b01111111;
 struct BingoSquare {
@@ -101,10 +96,6 @@ impl BingoBoard {
                 self.squares[i].mark();
             }
         }
-    }
-
-    fn mark_square(&mut self, index: usize) {
-        self.squares[index].mark();
     }
 
     fn has_won(&self) -> bool {
@@ -172,9 +163,9 @@ impl Display for BingoBoard {
     fn fmt(&self, fmt: &mut std::fmt::Formatter<'_>) -> std::result::Result<(), std::fmt::Error> {
         for r in self.rows() {
             for sq in r.into_iter() {
-                write!(fmt, "{} ", sq.get_value().to_string());
+                write!(fmt, "{} ", sq.get_value().to_string())?;
             }
-            writeln!(fmt, "");
+            writeln!(fmt, "")?;
         }
         Ok(())
     }
