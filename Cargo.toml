@@ -10,6 +10,6 @@ homepage = "https://github.com/breischl/advent_2021"
 
 [dependencies]
 "sliding_windows" = "3.0.0"
+"itertools" = "0.10"
 #"clap" = "3.*"
-
 "clap" = {git = "https://github.com/clap-rs/clap", features=["derive"]}
