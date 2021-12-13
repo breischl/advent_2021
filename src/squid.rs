@@ -53,6 +53,8 @@ pub fn run(input: String) -> Result<String, String> {
 
 const MARK_MASK: u8 = 0b10000000;
 const VALUE_MASK: u8 = 0b01111111;
+
+#[derive(Debug, Eq, PartialEq)]
 struct BingoSquare {
     val: u8,
 }
@@ -71,10 +73,11 @@ impl BingoSquare {
     }
 
     fn get_value(&self) -> u8 {
-        self.val | VALUE_MASK
+        self.val & VALUE_MASK
     }
 }
 
+#[derive(Debug)]
 struct BingoBoard {
     squares: Vec<BingoSquare>,
     size: usize,
@@ -168,5 +171,58 @@ impl Display for BingoBoard {
             writeln!(fmt, "")?;
         }
         Ok(())
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use super::*;
+
+    #[test]
+    pub fn can_mark_square_and_get_value() {
+        let mut sq = BingoSquare::new(127);
+        assert_eq!(127, sq.get_value());
+        assert_eq!(false, sq.is_marked());
+
+        sq.mark();
+        assert_eq!(127, sq.get_value());
+        assert_eq!(true, sq.is_marked());
+    }
+
+    #[test]
+    pub fn board_marking_and_reading() {
+        let mut board = BingoBoard::new(3, vec![1, 2, 3, 4, 5, 6, 7, 8, 9]);
+        println!("{}", board);
+
+        assert_eq!(false, board.has_won());
+        assert_eq!(None, board.get_winning_numbers());
+        assert_eq!(
+            vec![1, 2, 3, 4, 5, 6, 7, 8, 9],
+            board.get_unmarked_numbers()
+        );
+
+        board.record_draw(2);
+        assert_eq!(false, board.has_won());
+        assert_eq!(vec![1, 3, 4, 5, 6, 7, 8, 9], board.get_unmarked_numbers());
+        board.record_draw(3);
+        assert_eq!(false, board.has_won());
+        assert_eq!(vec![1, 4, 5, 6, 7, 8, 9], board.get_unmarked_numbers());
+
+        board.record_draw(5);
+        board.record_draw(9);
+        assert_eq!(false, board.has_won());
+        assert_eq!(vec![1, 4, 6, 7, 8], board.get_unmarked_numbers());
+
+        board.record_draw(8);
+        assert_eq!(true, board.has_won());
+        let winning_squares: Vec<u8> = board
+            .get_winning_numbers()
+            .unwrap()
+            .into_iter()
+            .map(|bs| bs.get_value())
+            .collect();
+
+        assert_eq!(vec![2, 5, 8], winning_squares);
+        assert_eq!(vec![1, 4, 6, 7], board.get_unmarked_numbers());
     }
 }
