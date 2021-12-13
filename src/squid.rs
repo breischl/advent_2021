@@ -25,9 +25,11 @@ pub fn run(input: String) -> Result<String, String> {
 
     let mut winning_board_idx: Option<usize> = None;
     let mut winning_number: Option<u8> = None;
+    let mut draws_made: Vec<u8> = Vec::with_capacity(draws.len());
     for draw in draws {
         //Needed to use the indexed loop here because otherwise there was no way to both modify the board and return it if it had won
         //Fought the borrow checker for waaaaay too long trying to figure out how to avoid this
+        draws_made.push(draw);
         for idx in 0..boards.len() {
             let board = boards.get_mut(idx).unwrap();
             board.record_draw(draw);
@@ -44,11 +46,26 @@ pub fn run(input: String) -> Result<String, String> {
 
     if let Some(idx) = winning_board_idx {
         let winning_board = &boards[idx];
-        println!("Winning number: {}", winning_number.unwrap());
-        println!("Winning board: \n{}", winning_board);
-    }
+        let unmarked_numbers = winning_board.get_unmarked_numbers();
+        let unmarked_sum: u64 = unmarked_numbers.iter().map(|b| *b as u64).sum();
+        let winning_number = winning_number.unwrap();
+        let score = unmarked_sum * winning_number as u64;
 
-    Err(String::from("Not implemented"))
+        println!("Draws made: {}", draws_made.iter().join(", "));
+        for board in &boards {
+            if !board.has_won() {
+                println!("Losing board:\n{}", board);
+            }
+        }
+        println!("Winning number: {}", winning_number);
+        println!("Winning board: \n{}", winning_board);
+        println!("Unmarked numbers: {}", unmarked_numbers.iter().join(", "));
+        println!("Unmarked sum: {}", unmarked_sum);
+        println!("Score: {}", score);
+        Ok(format!("Score: {}", score))
+    } else {
+        Err(String::from("Failed to find a winner"))
+    }
 }
 
 const MARK_MASK: u8 = 0b10000000;
@@ -166,7 +183,8 @@ impl Display for BingoBoard {
     fn fmt(&self, fmt: &mut std::fmt::Formatter<'_>) -> std::result::Result<(), std::fmt::Error> {
         for r in self.rows() {
             for sq in r.into_iter() {
-                write!(fmt, "{} ", sq.get_value().to_string())?;
+                let mark = if sq.is_marked() { "*" } else { "" };
+                write!(fmt, "{}{} ", sq.get_value().to_string(), mark)?;
             }
             writeln!(fmt, "")?;
         }
@@ -221,6 +239,8 @@ mod test {
             .into_iter()
             .map(|bs| bs.get_value())
             .collect();
+
+        println!("{}", board);
 
         assert_eq!(vec![2, 5, 8], winning_squares);
         assert_eq!(vec![1, 4, 6, 7], board.get_unmarked_numbers());
