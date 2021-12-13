@@ -1,5 +1,6 @@
 use itertools::Itertools;
 use std::fmt::Display;
+use std::ops::ControlFlow;
 
 pub fn run(input: String) -> Result<String, String> {
     let lines: Vec<&str> = input.lines().collect();
@@ -23,55 +24,95 @@ pub fn run(input: String) -> Result<String, String> {
         })
         .collect();
 
-    let mut winning_board_idx: Option<usize> = None;
-    let mut winning_number: Option<u8> = None;
+    //Finds the first winning board (ie, part 1)
+    // let mut draws_made: Vec<u8> = Vec::with_capacity(draws.len());
+    // if let ControlFlow::Break((winning_draw_idx, winning_board_idx)) = draws
+    //     .iter()
+    //     .enumerate()
+    //     .try_fold::<(usize, usize), _, _>((0, 0), |_, (draw_idx, &draw)| {
+    //         draws_made.push(draw);
+    //         if let ControlFlow::Break(winning_board_idx) = boards
+    //             .iter_mut()
+    //             .enumerate()
+    //             .try_fold::<usize, _, _>(0, |_, (board_idx, board)| {
+    //                 board.record_draw(draw);
+    //                 if board.has_won() {
+    //                     ControlFlow::Break(board_idx)
+    //                 } else {
+    //                     ControlFlow::Continue(0)
+    //                 }
+    //             })
+    //         {
+    //             ControlFlow::Break((draw_idx, winning_board_idx))
+    //         } else {
+    //             ControlFlow::Continue((0, 0))
+    //         }
+    //     })
+    // {
+    //     let winning_board = &boards[winning_board_idx];
+    //     let winning_number = *(&draws[winning_draw_idx]);
+    //     let unmarked_numbers = winning_board.get_unmarked_numbers();
+    //     let unmarked_sum: u64 = unmarked_numbers.iter().map(|b| *b as u64).sum();
+    //     let score = unmarked_sum * winning_number as u64;
+
+    //     println!("Draws made: {}", draws_made.iter().join(", "));
+    //     for board in &boards {
+    //         if !board.has_won() {
+    //             println!("Losing board:\n{}", board);
+    //         }
+    //     }
+    //     println!("Winning number: {}", winning_number);
+    //     println!("Winning board: \n{}", winning_board);
+    //     println!("Unmarked numbers: {}", unmarked_numbers.iter().join(", "));
+    //     println!("Unmarked sum: {}", unmarked_sum);
+    //     println!("Score: {}", score);
+    //     return Ok(format!("Score: {}", score));
+    // } else {
+    //     return Err(String::from("Failed to find a winner"));
+    // }
+
+    // Find the _last_ winning board (ie, part 2)
     let mut draws_made: Vec<u8> = Vec::with_capacity(draws.len());
+    let mut non_won_boards = boards.clone();
+    let mut last_number: Option<u8> = None;
+
     for draw in draws {
-        //Needed to use the indexed loop here because otherwise there was no way to both modify the board and return it if it had won
-        //Fought the borrow checker for waaaaay too long trying to figure out how to avoid this
-        draws_made.push(draw);
-        for idx in 0..boards.len() {
-            let board = boards.get_mut(idx).unwrap();
-            board.record_draw(draw);
-            if board.has_won() {
-                winning_board_idx = Some(idx);
-                winning_number = Some(draw);
+        if non_won_boards.len() > 1 {
+            for board in &mut non_won_boards {
+                board.record_draw(draw);
+            }
+            non_won_boards = non_won_boards
+                .into_iter()
+                .filter(|b| !b.has_won())
+                .collect();
+        } else {
+            let lb = non_won_boards.get_mut(0).unwrap();
+            lb.record_draw(draw);
+            if lb.has_won() {
+                last_number = Some(draw);
                 break;
             }
         }
-        if winning_board_idx.is_some() {
-            break;
-        }
     }
 
-    if let Some(idx) = winning_board_idx {
-        let winning_board = &boards[idx];
-        let unmarked_numbers = winning_board.get_unmarked_numbers();
-        let unmarked_sum: u64 = unmarked_numbers.iter().map(|b| *b as u64).sum();
-        let winning_number = winning_number.unwrap();
-        let score = unmarked_sum * winning_number as u64;
+    let last_board = &non_won_boards[0];
+    let unmarked_numbers = last_board.get_unmarked_numbers();
+    let unmarked_sum: u64 = unmarked_numbers.iter().map(|b| *b as u64).sum();
+    let score = unmarked_sum * last_number.unwrap() as u64;
 
-        println!("Draws made: {}", draws_made.iter().join(", "));
-        for board in &boards {
-            if !board.has_won() {
-                println!("Losing board:\n{}", board);
-            }
-        }
-        println!("Winning number: {}", winning_number);
-        println!("Winning board: \n{}", winning_board);
-        println!("Unmarked numbers: {}", unmarked_numbers.iter().join(", "));
-        println!("Unmarked sum: {}", unmarked_sum);
-        println!("Score: {}", score);
-        Ok(format!("Score: {}", score))
-    } else {
-        Err(String::from("Failed to find a winner"))
-    }
+    println!("Draws made: {}", draws_made.iter().join(", "));
+    println!("Last number: {}", last_number.unwrap());
+    println!("Last board: \n{}", last_board);
+    println!("Unmarked numbers: {}", unmarked_numbers.iter().join(", "));
+    println!("Unmarked sum: {}", unmarked_sum);
+    println!("Score: {}", score);
+    return Ok(format!("Score: {}", score));
 }
 
 const MARK_MASK: u8 = 0b10000000;
 const VALUE_MASK: u8 = 0b01111111;
 
-#[derive(Debug, Eq, PartialEq)]
+#[derive(Debug, Eq, PartialEq, Clone)]
 struct BingoSquare {
     val: u8,
 }
@@ -94,7 +135,7 @@ impl BingoSquare {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 struct BingoBoard {
     squares: Vec<BingoSquare>,
     size: usize,
