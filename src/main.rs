@@ -5,6 +5,7 @@ mod hydrothermal;
 mod lanternfish;
 mod sonar;
 mod squid;
+mod whales;
 
 use clap::{AppSettings, ArgGroup, Parser};
 use std::fs::File;
@@ -25,7 +26,7 @@ fn main() {
     }
     let path = Path::new("inputs").join(puzzle_info.input);
     let path_display = path.display();
-    println!("Reading input from {}", path_display);
+    //println!("Reading input from {}", path_display);
 
     let mut file = match File::open(&path) {
         Err(why) => panic!("couldn't open {}: {}", path_display, why),
@@ -88,6 +89,10 @@ fn get_puzzle_info(puzzle: &Puzzle) -> PuzzleInfo {
             input: String::from("lanternfish.txt"),
             func: &lanternfish::run,
         },
+        Puzzle::Whales => PuzzleInfo {
+            input: String::from("whales.txt"),
+            func: &whales::run,
+        },
         Puzzle::Latest => get_latest_puzzle(),
     }
 }
@@ -122,13 +127,15 @@ enum Puzzle {
     Squid,
     Hydrothermal,
     Lanternfish,
+    Whales,
 }
 
-const PUZZLES: [Puzzle; 6] = [
+const PUZZLES: [Puzzle; 7] = [
     Puzzle::Sonar,
     Puzzle::Dive,
     Puzzle::Binary,
     Puzzle::Squid,
     Puzzle::Hydrothermal,
     Puzzle::Lanternfish,
+    Puzzle::Whales,
 ];

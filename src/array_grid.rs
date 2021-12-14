@@ -1,4 +1,5 @@
 #[derive(Clone)]
+#[allow(dead_code)]
 pub struct ArrayGrid<T>
 where
     T: Clone + Default,
