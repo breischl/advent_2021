@@ -2,6 +2,7 @@ mod array_grid;
 mod binary;
 mod dive;
 mod hydrothermal;
+mod lanternfish;
 mod sonar;
 mod squid;
 
@@ -83,6 +84,10 @@ fn get_puzzle_info(puzzle: &Puzzle) -> PuzzleInfo {
             input: String::from("hydrothermal.txt"),
             func: &hydrothermal::run,
         },
+        Puzzle::Lanternfish => PuzzleInfo {
+            input: String::from("lanternfish.txt"),
+            func: &lanternfish::run,
+        },
         Puzzle::Latest => get_latest_puzzle(),
     }
 }
@@ -116,12 +121,14 @@ enum Puzzle {
     Binary,
     Squid,
     Hydrothermal,
+    Lanternfish,
 }
 
-const PUZZLES: [Puzzle; 5] = [
+const PUZZLES: [Puzzle; 6] = [
     Puzzle::Sonar,
     Puzzle::Dive,
     Puzzle::Binary,
     Puzzle::Squid,
     Puzzle::Hydrothermal,
+    Puzzle::Lanternfish,
 ];
