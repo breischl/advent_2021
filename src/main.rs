@@ -1,3 +1,4 @@
+mod array_grid;
 mod binary;
 mod dive;
 mod hydrothermal;
