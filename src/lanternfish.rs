@@ -8,7 +8,7 @@ pub fn run(input: String) -> Result<String, String> {
         .for_each(|a| age_tracker.increment(a));
 
     dump_ages(&age_tracker);
-    for _ in 0..80 {
+    for _ in 0..256 {
         age_tracker.advance();
         dump_ages(&age_tracker);
     }
