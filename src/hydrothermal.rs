@@ -95,13 +95,15 @@ impl LineSegment {
 }
 
 fn get_range_iter_inclusive(a: usize, b: usize) -> impl Iterator<Item = usize> {
-    let start = a.min(b);
-    let end = a.max(b);
+    //The fact that I need this method in the first place is stupid. Rust `Range` will not count down, only up.
+    //The canonical way to handle this is by calling `rev()`, ie instead of `(a..b)` you do `(b..a).rev()`
+    //Except those snippets result in two totally different and incompatible types.
+    //I fought that stupid mess for over an hour, and finally just said "fuck it" and did this hack instead
     if b > a {
-        let vec: Vec<usize> = (start..=end).collect();
+        let vec: Vec<usize> = (a..=b).collect();
         vec.into_iter()
     } else {
-        let vec: Vec<usize> = (start..=end).rev().collect();
+        let vec: Vec<usize> = (b..=a).rev().collect();
         vec.into_iter()
     }
 }
