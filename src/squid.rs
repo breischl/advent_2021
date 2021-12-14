@@ -1,6 +1,5 @@
 use itertools::Itertools;
 use std::fmt::Display;
-use std::ops::ControlFlow;
 
 pub fn run(input: String) -> Result<String, String> {
     let lines: Vec<&str> = input.lines().collect();
@@ -9,7 +8,7 @@ pub fn run(input: String) -> Result<String, String> {
         .map(|s| s.parse::<u8>().unwrap())
         .collect();
 
-    let mut boards: Vec<BingoBoard> = lines
+    let boards: Vec<BingoBoard> = lines
         .iter()
         .skip(1)
         .chunks(6)
@@ -72,7 +71,7 @@ pub fn run(input: String) -> Result<String, String> {
     // }
 
     // Find the _last_ winning board (ie, part 2)
-    let mut draws_made: Vec<u8> = Vec::with_capacity(draws.len());
+    let draws_made: Vec<u8> = Vec::with_capacity(draws.len());
     let mut non_won_boards = boards.clone();
     let mut last_number: Option<u8> = None;
 

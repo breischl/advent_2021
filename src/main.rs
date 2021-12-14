@@ -1,8 +1,10 @@
 mod binary;
 mod dive;
+mod hydrothermal;
 mod sonar;
-use clap::{AppSettings, ArgGroup, Parser};
 mod squid;
+
+use clap::{AppSettings, ArgGroup, Parser};
 use std::fs::File;
 use std::io::prelude::*;
 use std::path::Path;
@@ -76,6 +78,10 @@ fn get_puzzle_info(puzzle: &Puzzle) -> PuzzleInfo {
             input: String::from("squid.txt"),
             func: &squid::run,
         },
+        Puzzle::Hydrothermal => PuzzleInfo {
+            input: String::from("hydrothermal.txt"),
+            func: &hydrothermal::run,
+        },
         Puzzle::Latest => get_latest_puzzle(),
     }
 }
@@ -108,6 +114,13 @@ enum Puzzle {
     Dive,
     Binary,
     Squid,
+    Hydrothermal,
 }
 
-const PUZZLES: [Puzzle; 4] = [Puzzle::Sonar, Puzzle::Dive, Puzzle::Binary, Puzzle::Squid];
+const PUZZLES: [Puzzle; 5] = [
+    Puzzle::Sonar,
+    Puzzle::Dive,
+    Puzzle::Binary,
+    Puzzle::Squid,
+    Puzzle::Hydrothermal,
+];
