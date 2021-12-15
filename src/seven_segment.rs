@@ -27,7 +27,7 @@ pub fn run(input: String) -> Result<String, String> {
         .iter()
         .map(|(inputs, outputs)| {
             let segment_map = infer_segment_map(inputs);
-            let digit = outputs
+            outputs
                 .iter()
                 .map(|raw_out| {
                     let mut sorted_out: Vec<char> = raw_out.chars().collect();
@@ -43,8 +43,7 @@ pub fn run(input: String) -> Result<String, String> {
                 })
                 .join("")
                 .parse::<usize>()
-                .unwrap();
-            digit
+                .unwrap()
         })
         .inspect(|num| {
             log::debug!("Out: {}", num);
