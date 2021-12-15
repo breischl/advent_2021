@@ -1,3 +1,4 @@
+/// A square grid of objects, randomly addressable.
 #[derive(Clone)]
 pub struct ArrayGrid<T>
 where
@@ -43,41 +44,64 @@ where
         self.arr.iter()
     }
 
-    pub fn rows(&self) -> impl Iterator<Item = Vec<&T>> {
+    pub fn rows(&self) -> impl Iterator<Item = Box<dyn Iterator<Item = &T> + '_>> + '_ {
+        self.arr.chunks(self.size).map(|chunks| {
+            let row: Box<dyn Iterator<Item = &T>> = Box::new(chunks.iter());
+            row
+        })
+    }
+
+    pub fn columns(&self) -> impl Iterator<Item = Box<dyn Iterator<Item = &T> + '_>> + '_ {
         let mut index: usize = 0;
         std::iter::from_fn(move || {
             if index < self.size {
-                let row = self.get_row(index);
+                let col: Box<dyn Iterator<Item = &T>> = Box::new(self.get_column(index));
                 index += 1;
-                Some(row)
+                Some(col)
             } else {
                 None
             }
         })
     }
 
-    pub fn columns(&self) -> impl Iterator<Item = Vec<&T>> {
-        let mut index: usize = 0;
-        std::iter::from_fn(move || {
-            if index < self.size {
-                let row = self.get_column(index);
-                index += 1;
-                Some(row)
-            } else {
-                None
-            }
-        })
+    pub fn get_row(&self, row_idx: usize) -> impl Iterator<Item = &T> {
+        let start = row_idx * self.size;
+        let end = start + self.size;
+        self.arr[start..end].iter()
     }
 
-    pub fn get_row(&self, row_idx: usize) -> Vec<&T> {
-        self.arr
-            .iter()
-            .skip(row_idx * self.size)
-            .take(self.size)
-            .collect()
+    pub fn get_column(&self, col_idx: usize) -> impl Iterator<Item = &T> {
+        self.arr[col_idx..].iter().step_by(self.size)
     }
+}
 
-    pub fn get_column(&self, col_idx: usize) -> Vec<&T> {
-        self.arr.iter().skip(col_idx).step_by(self.size).collect()
+#[cfg(test)]
+mod test {
+    use super::*;
+
+    #[test]
+    pub fn rows_iterator_works() {
+        let mut grid: ArrayGrid<u16> = ArrayGrid::create(3);
+        grid.set(0, 0, 1);
+        grid.set(1, 0, 2);
+        grid.set(2, 0, 3);
+        grid.set(0, 1, 4);
+        grid.set(1, 1, 5);
+        grid.set(2, 1, 6);
+        grid.set(0, 2, 7);
+        grid.set(1, 2, 8);
+        grid.set(2, 2, 9);
+
+        let rows: Vec<Vec<&u16>> = grid.rows().map(|r| r.collect()).collect();
+        assert_eq!(3, rows.len());
+        assert_eq!(1, *rows[0][0]);
+        assert_eq!(2, *rows[0][1]);
+        assert_eq!(3, *rows[0][2]);
+        assert_eq!(4, *rows[1][0]);
+        assert_eq!(5, *rows[1][1]);
+        assert_eq!(6, *rows[1][2]);
+        assert_eq!(7, *rows[2][0]);
+        assert_eq!(8, *rows[2][1]);
+        assert_eq!(9, *rows[2][2]);
     }
 }
