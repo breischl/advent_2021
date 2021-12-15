@@ -143,10 +143,7 @@ struct BingoBoard {
 impl BingoBoard {
     fn new(size: usize, squares: Vec<u8>) -> BingoBoard {
         let squares = squares.into_iter().map(BingoSquare::new).collect();
-        BingoBoard {
-            size: size,
-            squares: squares,
-        }
+        BingoBoard { size, squares }
     }
 
     fn record_draw(&mut self, num: u8) {
@@ -226,7 +223,7 @@ impl Display for BingoBoard {
                 let mark = if sq.is_marked() { "*" } else { "" };
                 write!(fmt, "{}{} ", sq.get_value().to_string(), mark)?;
             }
-            writeln!(fmt, "")?;
+            writeln!(fmt)?;
         }
         Ok(())
     }

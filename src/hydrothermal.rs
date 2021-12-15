@@ -73,17 +73,11 @@ impl LineSegment {
     fn get_all_points(&self) -> Vec<Coordinate> {
         if self.start.x == self.end.x {
             get_range_iter_inclusive(self.start.y, self.end.y)
-                .map(|y| Coordinate {
-                    x: self.start.x,
-                    y: y,
-                })
+                .map(|y| Coordinate { x: self.start.x, y })
                 .collect()
         } else if self.start.y == self.end.y {
             get_range_iter_inclusive(self.start.x, self.end.x)
-                .map(|x| Coordinate {
-                    x: x,
-                    y: self.start.y,
-                })
+                .map(|x| Coordinate { x, y: self.start.y })
                 .collect()
         } else {
             get_range_iter_inclusive(self.start.x, self.end.x)

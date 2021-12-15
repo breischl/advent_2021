@@ -40,7 +40,7 @@ impl AgeTracker {
         AgeTracker {
             storage: vec,
             zero_age_idx: 0,
-            breeding_age: breeding_age,
+            breeding_age,
         }
     }
 
