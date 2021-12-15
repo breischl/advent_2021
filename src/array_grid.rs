@@ -1,5 +1,4 @@
 #[derive(Clone)]
-#[allow(dead_code)]
 pub struct ArrayGrid<T>
 where
     T: Clone + Default,
@@ -8,6 +7,7 @@ where
     arr: Vec<T>,
 }
 
+#[allow(dead_code)]
 impl<T> ArrayGrid<T>
 where
     T: Clone + Default,
