@@ -6,6 +6,7 @@ mod lanternfish;
 mod sonar;
 mod squid;
 mod whales;
+mod seven_segment;
 
 use clap::{AppSettings, ArgGroup, Parser};
 use std::fs::File;
@@ -93,6 +94,10 @@ fn get_puzzle_info(puzzle: &Puzzle) -> PuzzleInfo {
             input: String::from("whales.txt"),
             func: &whales::run,
         },
+        Puzzle::SevenSegment => PuzzleInfo {
+            input: String::from("seven_segment.txt"),
+            func: &seven_segment::run,
+        },
         Puzzle::Latest => get_latest_puzzle(),
     }
 }
@@ -128,9 +133,10 @@ enum Puzzle {
     Hydrothermal,
     Lanternfish,
     Whales,
+    SevenSegment,
 }
 
-const PUZZLES: [Puzzle; 7] = [
+const PUZZLES: [Puzzle; 8] = [
     Puzzle::Sonar,
     Puzzle::Dive,
     Puzzle::Binary,
@@ -138,4 +144,5 @@ const PUZZLES: [Puzzle; 7] = [
     Puzzle::Hydrothermal,
     Puzzle::Lanternfish,
     Puzzle::Whales,
+    Puzzle::SevenSegment
 ];
