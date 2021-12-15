@@ -18,13 +18,7 @@ pub fn run(input: String) -> Result<String, String> {
         .map(|(_inputs, outputs)| {
             outputs
                 .iter()
-                .filter(|&digit| match digit.len() {
-                    2 | 3 | 4 | 7 => {
-                        log::debug!("matching {}", digit);
-                        true
-                    }
-                    _ => false,
-                })
+                .filter(|&digit| matches!(digit.len(), 2 | 3 | 4 | 7))
                 .count()
         })
         .sum::<usize>();
@@ -60,9 +54,8 @@ pub fn run(input: String) -> Result<String, String> {
     Ok(format!("part1_out_digits={}, part2_sum={}", part1_sum, sum))
 }
 
-fn infer_segment_map(inputs: &Vec<&str>) -> HashMap<String, u8> {
+fn infer_segment_map(inputs: &[&str]) -> HashMap<String, u8> {
     /*
-    Part 2 is a little crazy. I think this is the basis of the decoder ring.env_logger
     2 segments => #1
     3 segments => #7
     4 segments => #4
@@ -74,7 +67,7 @@ fn infer_segment_map(inputs: &Vec<&str>) -> HashMap<String, u8> {
                   #9 - shares 2 segments with #1, 4 segments with #4, 3 segments with #7
     7 segments => #8
 
-    algorithm (on input side of line only)
+    algorithm:
     1) sort words by length
     2) Extract values for 2, 3, & 4 segments (they're just the first 3 values in the sorted result)
     3) For remaining segments, compute overlap with #1, #7 and #4 to determine values
