@@ -72,35 +72,30 @@ struct LineSegment {
 impl LineSegment {
     fn get_all_points(&self) -> Vec<Coordinate> {
         if self.start.x == self.end.x {
-            get_range_iter_inclusive(self.start.y, self.end.y)
+            safe_range_inclusive(self.start.y, self.end.y)
                 .map(|y| Coordinate { x: self.start.x, y })
                 .collect()
         } else if self.start.y == self.end.y {
-            get_range_iter_inclusive(self.start.x, self.end.x)
+            safe_range_inclusive(self.start.x, self.end.x)
                 .map(|x| Coordinate { x, y: self.start.y })
                 .collect()
         } else {
-            get_range_iter_inclusive(self.start.x, self.end.x)
-                .zip(get_range_iter_inclusive(self.start.y, self.end.y))
+            safe_range_inclusive(self.start.x, self.end.x)
+                .zip(safe_range_inclusive(self.start.y, self.end.y))
                 .map(|(x, y)| Coordinate { x, y })
                 .collect()
         }
     }
 }
 
-#[allow(clippy::needless_collect)]
-fn get_range_iter_inclusive(a: usize, b: usize) -> impl Iterator<Item = usize> {
-    //The fact that I need this method in the first place is stupid. Rust `Range` will not count down, only up.
-    //The canonical way to handle this is by calling `rev()`, ie instead of `(a..b)` you do `(b..a).rev()`
-    //Except those snippets result in two totally different and incompatible types.
-    //I fought that stupid mess for over an hour, and finally just said "fuck it" and did this hack instead
+fn safe_range_inclusive(a: usize, b: usize) -> impl Iterator<Item = usize> {
+    let x: Box<dyn Iterator<Item = usize>>;
     if b > a {
-        let vec: Vec<usize> = (a..=b).collect();
-        vec.into_iter()
+        x = Box::new(a..=b)
     } else {
-        let vec: Vec<usize> = (b..=a).rev().collect();
-        vec.into_iter()
+        x = Box::new((b..=a).rev())
     }
+    x
 }
 
 impl std::fmt::Display for LineSegment {
@@ -176,15 +171,15 @@ mod test {
     }
 
     #[test]
-    pub fn get_safe_range_inclusive_asc() {
-        let r: Vec<usize> = get_range_iter_inclusive(1, 10).collect();
+    pub fn safe_range_inclusivee_asc() {
+        let r: Vec<usize> = safe_range_inclusive(1, 10).collect();
         assert_eq!(r.first().unwrap(), &1);
         assert_eq!(r.last().unwrap(), &10);
     }
 
     #[test]
-    pub fn get_safe_range_inclusive_desc() {
-        let r: Vec<usize> = get_range_iter_inclusive(10, 1).collect();
+    pub fn safe_range_inclusive_desc() {
+        let r: Vec<usize> = safe_range_inclusive(10, 1).collect();
         assert_eq!(r.first().unwrap(), &10);
         assert_eq!(r.last().unwrap(), &1);
     }
