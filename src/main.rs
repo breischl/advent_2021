@@ -4,6 +4,7 @@ mod dive;
 mod hydrothermal;
 mod lanternfish;
 mod seven_segment;
+mod smoke_basin;
 mod sonar;
 mod squid;
 mod whales;
@@ -98,6 +99,10 @@ fn get_puzzle_info(puzzle: &Puzzle) -> PuzzleInfo {
             input: String::from("seven_segment.txt"),
             func: &seven_segment::run,
         },
+        Puzzle::SmokeBasin => PuzzleInfo {
+            input: String::from("smoke_basin.txt"),
+            func: &smoke_basin::run,
+        },
         Puzzle::Latest => get_latest_puzzle(),
     }
 }
@@ -134,9 +139,10 @@ enum Puzzle {
     Lanternfish,
     Whales,
     SevenSegment,
+    SmokeBasin,
 }
 
-const PUZZLES: [Puzzle; 8] = [
+const PUZZLES: [Puzzle; 9] = [
     Puzzle::Sonar,
     Puzzle::Dive,
     Puzzle::Binary,
@@ -145,4 +151,5 @@ const PUZZLES: [Puzzle; 8] = [
     Puzzle::Lanternfish,
     Puzzle::Whales,
     Puzzle::SevenSegment,
+    Puzzle::SmokeBasin,
 ];
