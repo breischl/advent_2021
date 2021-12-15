@@ -1,9 +1,11 @@
+use log;
+
 pub fn run(input: String) -> Result<String, String> {
     let out_digits_count = input
         .lines()
         .map(|line| {
             let parts: Vec<&str> = line.split('|').map(|s| s.trim()).collect();
-            //println!("parts={:?}", parts);
+            log::debug!("parts={:?}", parts);
             let inputs: Vec<&str> = parts[0].split_whitespace().collect();
             let outputs: Vec<&str> = parts[1].split_whitespace().collect();
             (inputs, outputs)
@@ -13,7 +15,7 @@ pub fn run(input: String) -> Result<String, String> {
                 .iter()
                 .filter(|&digit| match digit.len() {
                     2 | 3 | 4 | 7 => {
-                        //println!("matching {}", digit);
+                        log::debug!("matching {}", digit);
                         true
                     }
                     _ => false,

@@ -14,6 +14,7 @@ use std::io::prelude::*;
 use std::path::Path;
 
 fn main() {
+    env_logger::init();
     let args = Args::parse();
 
     let puzzle_info: PuzzleInfo;
