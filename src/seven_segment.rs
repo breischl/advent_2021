@@ -1,25 +1,6 @@
 use itertools::Itertools;
 use std::collections::{HashMap, HashSet};
 
-/*
-Part 2 is a little crazy. I think this is the basis of the decoder ring.env_logger
-2 segments => #1
-3 segments => #7
-4 segments => #4
-5 segments => #2 - shares 1 segment with #1, 2 segments with #4, 2 segments with #7
-              #3 - shares 2 segments with #1, 3 segments with #4, 3 segments with #7
-              #5 - shares 1 segment with #1, 3 segments with #4, 2 segments with #7
-6 segments => #0 - shares 2 segments with #1, 3 segments with #4, 3 segments with #7
-              #6 - shares 1 segment with #1, 3 segments with #4, 2 segments with #7
-              #9 - shares 2 segments with #1, 4 segments with #4, 3 segments with #7
-7 segments => #8
-
-algorithm (on input side of line only)
-1) sort words by length
-2) Extract values for 2, 3, & 4 segments
-3) For remaining segments, compute overlap with #1, #7 and #4 to determine values
-*/
-
 pub fn run(input: String) -> Result<String, String> {
     let io: Vec<(Vec<&str>, Vec<&str>)> = input
         .lines()
@@ -56,7 +37,7 @@ pub fn run(input: String) -> Result<String, String> {
                 .iter()
                 .map(|raw_out| {
                     let mut sorted_out: Vec<char> = raw_out.chars().collect();
-                    sorted_out.sort_unstable_by(|a, b| a.cmp(b));
+                    sorted_out.sort_unstable();
                     String::from_iter(sorted_out.iter())
                 })
                 .map(|out| {
@@ -80,15 +61,33 @@ pub fn run(input: String) -> Result<String, String> {
 }
 
 fn infer_segment_map(inputs: &Vec<&str>) -> HashMap<String, u8> {
+    /*
+    Part 2 is a little crazy. I think this is the basis of the decoder ring.env_logger
+    2 segments => #1
+    3 segments => #7
+    4 segments => #4
+    5 segments => #2 - shares 1 segment with #1, 2 segments with #4, 2 segments with #7
+                  #3 - shares 2 segments with #1, 3 segments with #4, 3 segments with #7
+                  #5 - shares 1 segment with #1, 3 segments with #4, 2 segments with #7
+    6 segments => #0 - shares 2 segments with #1, 3 segments with #4, 3 segments with #7
+                  #6 - shares 1 segment with #1, 3 segments with #4, 2 segments with #7
+                  #9 - shares 2 segments with #1, 4 segments with #4, 3 segments with #7
+    7 segments => #8
+
+    algorithm (on input side of line only)
+    1) sort words by length
+    2) Extract values for 2, 3, & 4 segments (they're just the first 3 values in the sorted result)
+    3) For remaining segments, compute overlap with #1, #7 and #4 to determine values
+    */
     let mut inputs: Vec<String> = inputs
-        .into_iter()
+        .iter()
         .map(|s| {
             let mut chars: Vec<char> = s.chars().collect();
             chars.sort_unstable();
             String::from_iter(chars.iter())
         })
         .collect();
-    inputs.sort_unstable_by(|a, b| a.len().cmp(&b.len()));
+    inputs.sort_unstable_by_key(|a| a.len());
 
     let mut results: Vec<SevenSegmentDigit> = Vec::with_capacity(10);
 
