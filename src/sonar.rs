@@ -2,19 +2,16 @@ use sliding_windows::{IterExt, Storage};
 use std::cmp::Ordering;
 
 pub fn run(input: String) -> Result<String, String> {
-    let depths: Vec<u16> = input
-        .lines()
-        .map(|line| match line.parse() {
-            Err(why) => panic!("Failed to parse {} to integer because {}", line, why),
-            Ok(num) => num,
-        })
-        .collect();
+    let depths = input.lines().map(|line| match line.parse() {
+        Err(why) => panic!("Failed to parse {} to integer because {}", line, why),
+        Ok(num) => num,
+    });
 
     //For educational reasons I wrote this to avoid cloning or re-reading the entire list of depths, even though in this exact case it would not be problematic.
     //This led to the following somewhat-awkward cloning of iterators. Problem is that I want `calculate_direction()` to take either a plain iterator of depths,
     //or an iterator of the sliding windows produced from `calculate_sliding_window_sums()`. But the former would be iterating references, while the latter iterates owned values.
     //This is the best solution I could find that doesn't re-read the depths or re-allocate an equal (or almost-equal) amount of space.
-    let mut depths_iter_1 = depths.into_iter();
+    let mut depths_iter_1 = depths;
     let mut depths_iter_2 = depths_iter_1.clone();
 
     let mut depth_diffs = calculate_direction(&mut depths_iter_1);
@@ -32,12 +29,12 @@ pub fn run(input: String) -> Result<String, String> {
 
 /// Calculate the direction between successive depth measurements in the given stream
 /// TODO: This should probably return Option<Iterator> instead, to account for error cases (eg, 0 or 1 element in the iterator)
-fn calculate_direction<'a>(
-    depths: &'a mut dyn Iterator<Item = u16>,
-) -> impl Iterator<Item = DepthDirection> + 'a {
+fn calculate_direction(
+    depths: &mut dyn Iterator<Item = u16>,
+) -> impl Iterator<Item = DepthDirection> + '_ {
     let mut prev: Option<u16> = None;
 
-    let new_iter = depths
+    depths
         .map(move |d: u16| {
             let direction = prev.map(|p| {
                 let diff = d.partial_cmp(&p).expect("How is your depth NaN?");
@@ -48,11 +45,9 @@ fn calculate_direction<'a>(
                 }
             });
             prev = Some(d);
-            return direction;
+            direction
         })
-        .flatten();
-
-    new_iter
+        .flatten()
 }
 
 /// Calculate the number of times the given iterator contains DepthDirection::Up
@@ -71,7 +66,7 @@ fn calculate_sliding_window_sums<'a>(
 ) -> impl Iterator<Item = u16> + 'a {
     depths
         .sliding_windows(storage)
-        .map(|window| window.iter().map(|&x| x).sum())
+        .map(|window| window.iter().copied().sum())
 }
 
 #[derive(PartialEq, Debug)]

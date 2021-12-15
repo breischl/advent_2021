@@ -1,9 +1,9 @@
 pub fn run(input: String) -> Result<String, String> {
     let (pos, multiple) = run_internal(input)?;
-    Ok(String::from(format!(
+    Ok(format!(
         "Range: {}, Depth: {}, Aim: {}, multiple: {}",
         pos.range, pos.depth, pos.aim, multiple
-    )))
+    ))
 }
 
 #[allow(unused_parens)]
@@ -17,7 +17,7 @@ fn run_internal(input: String) -> Result<(SubState, u64), String> {
 
     for result in commands_results {
         match result {
-            Err(e) => return Err(e.to_string()),
+            Err(e) => return Err(e),
             Ok(command) => match command {
                 Command::Forward { distance: d } => {
                     pos.range += d;

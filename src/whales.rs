@@ -1,6 +1,6 @@
 pub fn run(input: String) -> Result<String, String> {
     let mut crabs: Vec<i32> = input
-        .split(",")
+        .split(',')
         .map(|c| c.parse::<i32>().unwrap())
         .collect();
     crabs.sort_unstable();

@@ -3,10 +3,10 @@ mod binary;
 mod dive;
 mod hydrothermal;
 mod lanternfish;
+mod seven_segment;
 mod sonar;
 mod squid;
 mod whales;
-mod seven_segment;
 
 use clap::{AppSettings, ArgGroup, Parser};
 use std::fs::File;
@@ -36,9 +36,8 @@ fn main() {
 
     // Read the file contents into a string, returns `io::Result<usize>`
     let mut s = String::new();
-    match file.read_to_string(&mut s) {
-        Err(why) => panic!("couldn't read {}: {}", path_display, why),
-        Ok(_) => (),
+    if let Err(why) = file.read_to_string(&mut s) {
+        panic!("couldn't read {}: {}", path_display, why);
     }
 
     let result = (*puzzle_info.func)(s);
@@ -144,5 +143,5 @@ const PUZZLES: [Puzzle; 8] = [
     Puzzle::Hydrothermal,
     Puzzle::Lanternfish,
     Puzzle::Whales,
-    Puzzle::SevenSegment
+    Puzzle::SevenSegment,
 ];

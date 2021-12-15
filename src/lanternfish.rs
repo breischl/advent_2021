@@ -3,7 +3,7 @@ use itertools::Itertools;
 pub fn run(input: String) -> Result<String, String> {
     let mut age_tracker = AgeTracker::new(9, 6);
     input
-        .split(",")
+        .split(',')
         .map(|c| c.parse::<usize>().unwrap())
         .for_each(|a| age_tracker.increment(a));
 
@@ -15,7 +15,7 @@ pub fn run(input: String) -> Result<String, String> {
 
     let total_fish: u64 = age_tracker.iter().sum();
 
-    Ok(String::from(format!("fish: {}", total_fish)))
+    Ok(format!("fish: {}", total_fish))
 }
 
 fn dump_ages(tracker: &AgeTracker) {
@@ -34,8 +34,7 @@ struct AgeTracker {
 
 impl AgeTracker {
     fn new(num_ages: usize, breeding_age: usize) -> AgeTracker {
-        let mut vec: Vec<u64> = Vec::with_capacity(num_ages);
-        vec.resize(num_ages, 0);
+        let vec: Vec<u64> = vec![0; num_ages];
 
         AgeTracker {
             storage: vec,

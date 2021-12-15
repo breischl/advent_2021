@@ -72,7 +72,7 @@ pub fn run(input: String) -> Result<String, String> {
 
     // Find the _last_ winning board (ie, part 2)
     let draws_made: Vec<u8> = Vec::with_capacity(draws.len());
-    let mut non_won_boards = boards.clone();
+    let mut non_won_boards = boards;
     let mut last_number: Option<u8> = None;
 
     for draw in draws {
@@ -122,7 +122,7 @@ impl BingoSquare {
     }
 
     fn mark(&mut self) {
-        self.val = self.val | MARK_MASK;
+        self.val |= MARK_MASK;
     }
 
     fn is_marked(&self) -> bool {
@@ -165,7 +165,7 @@ impl BingoBoard {
             .find(|squares| squares.iter().all(|c| c.is_marked()))
     }
 
-    fn get_unmarked_numbers<'a>(&self) -> Vec<u8> {
+    fn get_unmarked_numbers(&self) -> Vec<u8> {
         self.squares
             .iter()
             .filter(|s: &&BingoSquare| !s.is_marked())

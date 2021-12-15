@@ -29,7 +29,7 @@ fn parse_line(line: &str) -> LineSegment {
 }
 
 fn parse_coordinate(raw_coord: &str) -> Coordinate {
-    let list: Vec<&str> = raw_coord.split(",").collect();
+    let list: Vec<&str> = raw_coord.split(',').collect();
     if let [raw_x, raw_y] = &list[..] {
         Coordinate {
             x: raw_x.parse::<usize>().unwrap(),
@@ -88,6 +88,7 @@ impl LineSegment {
     }
 }
 
+#[allow(clippy::needless_collect)]
 fn get_range_iter_inclusive(a: usize, b: usize) -> impl Iterator<Item = usize> {
     //The fact that I need this method in the first place is stupid. Rust `Range` will not count down, only up.
     //The canonical way to handle this is by calling `rev()`, ie instead of `(a..b)` you do `(b..a).rev()`

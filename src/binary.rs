@@ -23,13 +23,13 @@ pub fn run(input: String) -> Result<String, String> {
     let co2_rating = find_lr_value(&binary_lines, false);
     let lr_rating = oxy_power as u64 * co2_rating as u64;
 
-    Ok(String::from(format!(
+    Ok(format!(
         "Gamma: {}, Epsilon: {}, Power: {}\nOxy: {}, CO2: {}, Life Support: {}",
         gamma, epsilon, power, oxy_power, co2_rating, lr_rating
-    )))
+    ))
 }
 
-fn find_lr_value(nums: &Vec<u16>, find_most_common: bool) -> u16 {
+fn find_lr_value(nums: &[u16], find_most_common: bool) -> u16 {
     let mut prefix: u16 = 0;
     let mut mask: u16 = 0;
 
@@ -51,14 +51,14 @@ fn find_lr_value(nums: &Vec<u16>, find_most_common: bool) -> u16 {
         } else if zeroes + ones == 0 {
             //This is a big hack. If we got to zero matches, then unset the previous mask bit and we should be done.
             //Covers case where the last bit left us with a single 1 and a single 0
-            mask = mask & !(1 << (bitidx - 1));
+            mask &= !(1 << (bitidx - 1));
             break;
-        } else if find_most_common && ones >= zeroes {
-            prefix = prefix | 1 << bitidx;
-        } else if !find_most_common && ones < zeroes && ones > 0 {
-            prefix = prefix | 1 << bitidx;
+        } else if (find_most_common && ones >= zeroes)
+            || (!find_most_common && ones < zeroes && ones > 0)
+        {
+            prefix |= 1 << bitidx;
         }
-        mask = mask | (1 << bitidx);
+        mask |= 1 << bitidx;
     }
 
     let results: Vec<&u16> = nums
@@ -76,13 +76,14 @@ fn is_prefix_match(left: &u16, right: &u16, mask: u16) -> bool {
 
 fn bits_to_int(bits: &[u16; BIT_LENGTH]) -> u16 {
     let mut int = 0u16;
-    for i in 0..BIT_LENGTH {
-        let shifted = bits[i].clone() << (BIT_LENGTH - i - 1);
-        int = int | shifted;
+    for (i, bit) in bits.iter().enumerate() {
+        let shifted = bit << (BIT_LENGTH - i - 1);
+        int |= shifted;
     }
     int
 }
 
+#[allow(clippy::needless_range_loop)]
 fn find_most_common_bits(ints: std::slice::Iter<u16>) -> [u16; BIT_LENGTH] {
     let mut counts: [u16; BIT_LENGTH] = [0; BIT_LENGTH];
     let mut num_items: u32 = 0;
