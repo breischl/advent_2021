@@ -1,7 +1,7 @@
 use crate::array_grid::ArrayGrid;
 
 pub fn run(input: String) -> Result<String, String> {
-    let mut grid: ArrayGrid<VentSquare> = ArrayGrid::create(1000);
+    let mut grid: ArrayGrid<VentSquare> = ArrayGrid::create_square(1000);
 
     input
         .lines()

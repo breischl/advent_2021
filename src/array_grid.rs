@@ -1,10 +1,11 @@
-/// A square grid of objects, randomly addressable.
+/// A rectangular grid of objects, randomly addressable.
 #[derive(Clone)]
 pub struct ArrayGrid<T>
 where
     T: Clone + Default,
 {
-    size: usize,
+    width: usize,
+    height: usize,
     arr: Vec<T>,
 }
 
@@ -13,12 +14,22 @@ impl<T> ArrayGrid<T>
 where
     T: Clone + Default,
 {
-    pub fn create(size: usize) -> ArrayGrid<T> {
-        let vec_size = size.pow(2);
+    pub fn create(width: usize, height: usize) -> ArrayGrid<T> {
+        let vec_size = width * height;
         let mut arr: Vec<T> = Vec::with_capacity(vec_size);
         arr.resize(vec_size, T::default());
 
-        ArrayGrid { size, arr }
+        ArrayGrid { width, height, arr }
+    }
+
+    pub fn create_square(size: usize) -> ArrayGrid<T> {
+        ArrayGrid::create(size, size)
+    }
+
+    pub fn create_from(width: usize, height: usize, arr: Vec<T>) -> ArrayGrid<T> {
+        debug_assert_eq!(arr.len(), width * height);
+
+        ArrayGrid { width, height, arr }
     }
 
     pub fn set(&mut self, xu: usize, yu: usize, val: T) {
@@ -31,13 +42,21 @@ where
         &self.arr[idx]
     }
 
+    pub fn get_checked(&self, x: i64, y: i64) -> Option<&T> {
+        if x < 0 || y < 0 || x as usize >= self.width || y as usize >= self.height {
+            None
+        } else {
+            Some(self.get(x as usize, y as usize))
+        }
+    }
+
     pub fn get_mut(&mut self, xu: usize, yu: usize) -> &mut T {
         let idx = self.get_index(xu, yu);
         &mut self.arr[idx]
     }
 
     fn get_index(&self, xu: usize, yu: usize) -> usize {
-        xu + yu * self.size
+        xu + yu * self.width
     }
 
     pub fn iter(&self) -> std::slice::Iter<T> {
@@ -45,7 +64,7 @@ where
     }
 
     pub fn rows(&self) -> impl Iterator<Item = Box<dyn Iterator<Item = &T> + '_>> + '_ {
-        self.arr.chunks(self.size).map(|chunks| {
+        self.arr.chunks(self.width).map(|chunks| {
             let row: Box<dyn Iterator<Item = &T>> = Box::new(chunks.iter());
             row
         })
@@ -54,7 +73,7 @@ where
     pub fn columns(&self) -> impl Iterator<Item = Box<dyn Iterator<Item = &T> + '_>> + '_ {
         let mut index: usize = 0;
         std::iter::from_fn(move || {
-            if index < self.size {
+            if index < self.width {
                 let col: Box<dyn Iterator<Item = &T>> = Box::new(self.get_column(index));
                 index += 1;
                 Some(col)
@@ -65,13 +84,13 @@ where
     }
 
     pub fn get_row(&self, row_idx: usize) -> impl Iterator<Item = &T> {
-        let start = row_idx * self.size;
-        let end = start + self.size;
+        let start = row_idx * self.width;
+        let end = start + self.width;
         self.arr[start..end].iter()
     }
 
     pub fn get_column(&self, col_idx: usize) -> impl Iterator<Item = &T> {
-        self.arr[col_idx..].iter().step_by(self.size)
+        self.arr[col_idx..].iter().step_by(self.width)
     }
 }
 
@@ -81,7 +100,7 @@ mod test {
 
     #[test]
     pub fn rows_iterator_works() {
-        let mut grid: ArrayGrid<u16> = ArrayGrid::create(3);
+        let mut grid: ArrayGrid<u16> = ArrayGrid::create_square(3);
         grid.set(0, 0, 1);
         grid.set(1, 0, 2);
         grid.set(2, 0, 3);
